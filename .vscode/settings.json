@@ -1,0 +1,29 @@
+{
+    "workbench.colorCustomizations": {
+        "editor.lineHighlightBackground": "#01245689",
+        "editor.lineHighlightBorder": "#1235679A",
+        "editorBracketHighlight.foreground1": "#C80000FF",
+        "editorBracketHighlight.foreground2": "#FF4500FF",
+        "editorBracketHighlight.foreground3": "#FFD700FF",
+        "editorBracketHighlight.foreground4": "#0E7A0DFF",
+        "editorBracketHighlight.foreground5": "#0080FFFF",
+        "editorBracketHighlight.foreground6": "#B146C2FF",
+        "editorBracketHighlight.unexpectedBracket.foreground": "#8C4600",
+        "editorBracketPairGuide.activeBackground1": "#C80000FF",
+        "editorIndentGuide.activeBackground1": "#C80000AA",
+        "editorIndentGuide.activeBackground2": "#FF4500AA",
+        "editorIndentGuide.activeBackground3": "#FFD700AA",
+        "editorIndentGuide.activeBackground4": "#0E7A0DAA",
+        "editorIndentGuide.activeBackground5": "#0080FFAA",
+        "editorIndentGuide.activeBackground6": "#B146C2AA",
+        "editorIndentGuide.background1": "#C8000088",
+        "editorIndentGuide.background2": "#FF450088",
+        "editorIndentGuide.background3": "#FFD70088",
+        "editorIndentGuide.background4": "#0E7A0D88",
+        "editorIndentGuide.background5": "#0080FF88",
+        "editorIndentGuide.background6": "#B146C288",
+        "editorWhitespace.foreground": "#393A3D",
+        "minimap.background": "#00000000",
+        "scrollbar.shadow": "#00000000"
+    }
+}
