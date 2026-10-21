@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 2026.10.20.1645
+.VERSION 2026.10.20.2300
 .GUID 8E92F731-C034-4C3D-882E-B71589CEE72B
 .AUTHOR Scott T Surber
 .COMPANYNAME STS Consulting
@@ -8,9 +8,9 @@
 .EXTERNALMODULEDEPENDENCIES
 .REQUIREDSCRIPTS
 .EXTERNALSCRIPTDEPENDENCIES
-.PROJECTURI https://github.com/STS-Consulting/STS.Convert-WindowsImage
+.PROJECTURI https://github.com/STS-Consulting/PowerShell
 .LICENSEURI https://creativecommons.org/licenses/by-nc-sa/4.0/
-.ICONURI    https://github.com/STS-Consulting/STS.Convert-WindowsImage/raw/monad/Resources/STS.Consulting.png
+.ICONURI    https://github.com/STS-Consulting/PowerShell/raw/monad/Resources/STS.Consulting.png
 .TAGS STS PowerShell QualityAssurance Consistency Changelog CI
 .RELEASENOTES Validates repository consistency, Keep a Changelog 1.1.0 compliance, and CalVer alignment.
 .PRIVATEDATA
@@ -92,9 +92,10 @@ begin {
         [System.StringComparer]::OrdinalIgnoreCase
     )
 
+    $repoLeaf = Split-Path -Path $RootPath -Leaf
     $canonicalLicense = 'https://creativecommons.org/licenses/by-nc-sa/4.0/'
-    $canonicalProject = 'https://github.com/STS-Consulting/STS.Convert-WindowsImage'
-    $canonicalIcon    = 'https://github.com/STS-Consulting/STS.Convert-WindowsImage/raw/monad/Resources/STS.Consulting.png'
+    $canonicalProject = "https://github.com/STS-Consulting/$repoLeaf"
+    $canonicalIcon    = "https://github.com/STS-Consulting/$repoLeaf/raw/monad/Resources/STS.Consulting.png"
 
     $results = [System.Collections.Generic.List[pscustomobject]]::new()
 
@@ -218,25 +219,34 @@ process {
     # # ## ### ##### ######### ############# ##################### ##################################
     # 2. Git Staged / Pre-Commit Validation (when -VerifyGitStaged is specified)
     if ($VerifyGitStaged) {
-        $stagedFiles = @(git diff --cached --name-only)
-        if ($stagedFiles.Count -gt 0) {
-            $stagedCodeFiles = $stagedFiles | Where-Object {
-                $PSItem -match '\.(ps1|psm1|psd1|cs)$' -and $PSItem -notmatch '(^Documentation[/\\]|Test-RepositoryConsistency)'
-            }
+        $isGitRepo = (git -C $RootPath rev-parse --is-inside-work-tree 2>$null) -eq 'true'
+        if ($isGitRepo) {
+            $stagedFiles = @(git -C $RootPath diff --cached --name-only)
+            if ($stagedFiles.Count -gt 0) {
+                $stagedCodeFiles = $stagedFiles | Where-Object {
+                    $PSItem -match '\.(ps1|psm1|psd1|cs)$' -and $PSItem -notmatch '(^Documentation[/\\]|Test-RepositoryConsistency|^\.vscode[/\\])'
+                } | Where-Object {
+                    $fileDiff = git -C $RootPath diff --cached -I '^\s*#' -I '^\s*(\.VERSION|ModuleVersion)\b' -- $PSItem 2>$null
+                    [bool]$fileDiff
+                }
 
-            if ($stagedCodeFiles.Count -gt 0) {
-                $changelogStaged = $stagedFiles | Where-Object { $PSItem -match 'CHANGELOG\.md$' }
-                $hasChangelogStaged = [bool]$changelogStaged
-                $stagedMsg = if ($hasChangelogStaged) {
-                    "Changelog is staged alongside code changes ($($stagedCodeFiles.Count) files)"
+                if ($stagedCodeFiles.Count -gt 0) {
+                    $changelogStaged = $stagedFiles | Where-Object { $PSItem -match 'CHANGELOG\.md$' }
+                    $hasChangelogStaged = [bool]$changelogStaged
+                    $stagedMsg = if ($hasChangelogStaged) {
+                        "Changelog is staged alongside code changes ($($stagedCodeFiles.Count) files)"
+                    }
+                    else {
+                        "Code files staged ($($stagedCodeFiles.Count) files: $($stagedCodeFiles -join ', ')), but .github/CHANGELOG.md was not staged for commit"
+                    }
+                    Add-CheckResult -Category 'GitCheckin' -Target '.github/CHANGELOG.md' -Check 'ChangelogStagedWithCodeChanges' -Passed $hasChangelogStaged -Message $stagedMsg
                 }
                 else {
-                    "Code files staged ($($stagedCodeFiles.Count) files), but .github/CHANGELOG.md was not staged for commit"
+                    Add-CheckResult -Category 'GitCheckin' -Target 'GitStaged' -Check 'ChangelogStagedWithCodeChanges' -Passed $true -Message 'No code modifications staged'
                 }
-                Add-CheckResult -Category 'GitCheckin' -Target '.github/CHANGELOG.md' -Check 'ChangelogStagedWithCodeChanges' -Passed $hasChangelogStaged -Message $stagedMsg
             }
             else {
-                Add-CheckResult -Category 'GitCheckin' -Target 'GitStaged' -Check 'ChangelogStagedWithCodeChanges' -Passed $true -Message 'No code modifications staged'
+                Add-CheckResult -Category 'GitCheckin' -Target 'GitStaged' -Check 'ChangelogStagedWithCodeChanges' -Passed $true -Message 'No files staged for commit'
             }
         }
     }
@@ -319,8 +329,8 @@ end {
 # SIG # Begin signature block
 # MIIcRAYJKoZIhvcNAQcCoIIcNTCCHDECAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCD/FwlS/XzKjcdQ
-# 8Mtcs3KyqdMXzpf90WfkNVfE8MOWlaCCFnYwggM4MIICIKADAgECAhBq68etXxgs
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCDm7h6KVUz8lPJN
+# eq/XDo+2v8ajw5aHxfVFc+7gQom476CCFnYwggM4MIICIKADAgECAhBq68etXxgs
 # l0IzUnGnriXYMA0GCSqGSIb3DQEBCwUAMDQxMjAwBgNVBAMMKUF1dGhlbnRpY29k
 # ZSBDb2RlU2lnbmluZ0NlcnQgMjYwOC4zMC4yMTM5MB4XDTI2MDgzMTA0MjkyNFoX
 # DTI3MDgzMTA0NDkyNFowNDEyMDAGA1UEAwwpQXV0aGVudGljb2RlIENvZGVTaWdu
@@ -444,28 +454,28 @@ end {
 # dGljb2RlIENvZGVTaWduaW5nQ2VydCAyNjA4LjMwLjIxMzkCEGrrx61fGCyXQjNS
 # caeuJdgwDQYJYIZIAWUDBAIBBQCggYQwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKA
 # ADAZBgkqhkiG9w0BCQMxDAYKKwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYK
-# KwYBBAGCNwIBFTAvBgkqhkiG9w0BCQQxIgQgm9aLk6UJe7jucmuk5PP5HbDqpYxR
-# 3QeyFwaX7cBz29UwDQYJKoZIhvcNAQEBBQAEggEA1lTMddguD1SvfJvhhXFTgfre
-# QZDUEIGOIAX2fBkigCUMnRylCA1CWh7dSrd062CU4aDyDMDHuzhr15ezaIbd0SKn
-# rPakk5OQpUHF2MLU1ETTVqQxJMeqnintbkJ2NMx7WQPB/DxXajLISBN0smCQdq6h
-# 34qkTXbd4HPf9OGenyrZvccLhMv+E8gFdBqdjPROcbG4CFp2g0si4T938+nWKfgX
-# /JKyXzheQAoeHSKO682XDdbT/9J1I98Bm+OZOijTCv3C+PVjWjZ0dH7KsJ4Kvf6s
-# 0TCwiLGS73HUWyLYgi3ykkv21BHoPuZaiXRi1I7W2PdG3PeJ/XH4HJDe9JJJWqGC
+# KwYBBAGCNwIBFTAvBgkqhkiG9w0BCQQxIgQg/RbstO5pRoE70jQ1qONMiJnG+4ig
+# lZN6K2JqNEQATwEwDQYJKoZIhvcNAQEBBQAEggEAZS2UGo6uVmxv7HqJlGCNaC9+
+# OVu8gIM+LZhjY5O4s4f6m+nt7vzNQTbDua2mcUynV2H9Rh+x7KEK8MpNch6WQVSJ
+# Dn44Py9/YY7QhUqc9jVQEHPp0MPutxB5vrQHJas0u1YLTAwJ6U6A7sVXq8JHpVVG
+# 2X99rLgeceqov+nA4Ax5bEjNeZtq/IAL4+dqVjK6zw2v25CI7Vgi1vB3YkcJuv7J
+# l48KdYJ/oskeFY9icF0QYB4EB5xn5bjI4vbcb4KbAFIjzfpBcAEDCZ/FTgwHLrke
+# AZ7rD3H98ZEjVdGL1bzqX3Cozf1K6oR5dA2aOPeNAXk04IT3L8PLX6o5E87lBqGC
 # AyYwggMiBgkqhkiG9w0BCQYxggMTMIIDDwIBATB9MGkxCzAJBgNVBAYTAlVTMRcw
 # FQYDVQQKEw5EaWdpQ2VydCwgSW5jLjFBMD8GA1UEAxM4RGlnaUNlcnQgVHJ1c3Rl
 # ZCBHNCBUaW1lU3RhbXBpbmcgUlNBNDA5NiBTSEEyNTYgMjAyNSBDQTECEAhP3DNP
 # fkVO28MPj/mSGDUwDQYJYIZIAWUDBAIBBQCgaTAYBgkqhkiG9w0BCQMxCwYJKoZI
-# hvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0yNjEwMjAyMzU3MTZaMC8GCSqGSIb3DQEJ
-# BDEiBCBSD279G8FaAnUTWcdZTltDCBHIQ3yKuSpGtHaI9NLwRzANBgkqhkiG9w0B
-# AQEFAASCAgCfCw5owGaiZ2ChUzh1sqtAznsGILIYYx2+kUjZ68a0bVq0VFIMrS5Y
-# 60FtG4a7bzFhICvDUxinJ/mH7mzFVU83HdDBqH/bcoaRi1BJTdlbDj15V1cU5Kjk
-# In5N4M/kpYJbOh+IEF73XwfapDKN9zdqxSmV2ZZ6XO53sd0NbSF2+K1VWl9a2f4N
-# 1Xhr0FwOZXeRJHKJ6GHAHxTQcyyCVlRL4Xp2T5lASxM1/TNZqMucYUYfzs7X4s+A
-# UtOzgbdk/vVlZWFlVIjx88J+VOJ2YGq3bohlMrO2yswyo4hFmTdXVOj1416Knx7/
-# qrzb/QLwOzFVcHpKl4WssYJf1ckKTL/Iptel1IyO/hpbRxeyv7/jyMRSsey32lOK
-# 75AHPyodoIADf2ttOtpdGc0+gROa3kkwLXIbnVoIUv4LAp4TuR+1YPmEOKHrWxMo
-# vgTX8jWDufyfIXBqPBnrEgBdjoxPQv6Z4P/s/yiwhml28hCD1DcQkjwEFf6CDfAI
-# K9QwRciNtSJalebtZ2LRtfPEiEBrK11RIkJz6qUCc+I6SkN/fi8OHKrwzzLHLFQ3
-# RPI7QE528ocB1/FMIyJKaUJsuLVFr5HosWyAhjNCdGLm9HYuruUphq2rWcur4PGg
-# twTMNWTuBQDdyLz71TPbBvRbALih+5ZzGYY9H3N1yispioNdICOfTQ==
+# hvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0yNjEwMjEwNjEwMjFaMC8GCSqGSIb3DQEJ
+# BDEiBCD0edZzHPh9nBGRn88bSfrrwQEDeVaSQ+poh4CjF286ETANBgkqhkiG9w0B
+# AQEFAASCAgAopAqmaThZoDlnReD23n4IW/flKVUAqL+AE8OBOrDqQVTjUb+Nhlet
+# 4Dn29lJLdS7JQyh27zU+CaNOKIKRR9PcRq3Y3WzY6Kfb+YcQKZkQeGXCb2Eoi0bY
+# jToZlNIFQWZidpObmBXxaYhtCX2mtj0LMKraGLhfGYd0GS74i+OkT4et2sm0Qhp3
+# Jqw4Z1Co4aju2/7ExTd4uirsBWAUb4tFlo78jdRqofCJZxsZ1JhgSTVFXqcvJAZs
+# vO+FXP06n0JZHZuN9mBa4Vi+021/V82W6c3hpu1XuPoBairTR+eDgDwcJCrwP2yV
+# J7MyhHsx36S0aLp5hwc4C3i6Y1VovRj/NmQSs7LBhi6E+AXtpU9dCBr0soXwnZ8E
+# g8CmWs4AsgtsycYbYjRF7LUmnJBmMof3GdvdO1b6l970wGEbBKX/gio9gJplgwho
+# 3RSlMHrtL88PRJLGJMFAs1+cWM92yE1h6kZjaY2dE9h8CO0NW6lh8tR8AzR6Lfey
+# aNFBivM/bep3M7PFc369vmadybVh4AMm3uEMWaGA8TE7aQYfywzPz0bo8TJ77xqG
+# J/ZjCIbLGccWdwEPF4vUFu1HjkWjOkunx9OoSmW5J8CGdEMTdTZB4tQzTzYPmnLA
+# 6tQCVOzSi306ySOCqsTFa5pdVtJrCXVFOCGWJiENYIejZFCn7hnbbw==
 # SIG # End signature block
