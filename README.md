@@ -1,60 +1,144 @@
-# Convert-WindowsImage
-Creates a Windows VM for Hyper-V from a Windows-ISO
+# STS.Convert-WindowsImage
 
-# Release 21H2
-Currently **supported and tested**:
-- Windows 7, 8, 8.1
-- Windows 10 / all versions up to 21H2
-- **new** Windows 11 / all versions up to 21H2 in UEFI **and** BIOS
-- **experimental** ARM64 support / all versions up to 21H2 in UEFI
-  - I don't have the hardware to test this on ARM64 &#128576;
+![STS Logo](https://github.com/STS-Consulting/STS.Convert-WindowsImage/raw/monad/Resources/STS.Consulting.png)
 
-BIOS-DiskLayout
-- Windows Server 2016 / 2019 / **new** 2022
-- It should work for all versions from Windows 7 up to 11. Please file a bug report, if a version does not work.
+PowerShell utility to create Windows bootable VHD/VHDX images and Hyper-V virtual machines directly from ISO media.
 
-VM's run on Hyper-V (DiskLayout: BIOS uses Gen1-VM, UEFI uses Gen2-VM)
+![Maturity: Experimental](https://img.shields.io/badge/maturity-experimental-yellow)
+![Development: Active](https://img.shields.io/badge/development-active-blue)
+![Support: Limited](https://img.shields.io/badge/support-limited-yellow)
+[![CalVer - YYYY.0M.0D](https://img.shields.io/badge/calver-YYYY.0M.0D-22bfda.svg)](https://calver.org/)
+[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](LICENSE.md)
 
-## Examples
+## Table of Contents
 
-1. Dotsource the script to load the functions
-   
-`. .\Convert-WindowsImage.ps1`
+- [Read Me](#readme)
+- - [Module Workflow & Architecture](STS.Convert-WindowsImage.README.md)
+- [Governance](#governance)
+- [AI Policy](#ai-policy)
+- [Authors](#authors)
+- [Accessibility](#accessibility)
+  - [Accessibility Challenge template](#accessibility-challenge-template)
+- [Support](#support)
+- [Code Owners](#code-owners)
+- [Changelog](#changelog)
+- [Code of Conduct](#code-of-conduct)
+  - [Conduct Report template](#conduct-report-template)
+- [Contributing](#contributing)
+  - [Pull Request template](#pull-request-template)
+- [Contributors](#contributors)
+- [Acknowledgments](#acknowledgments)
+- [License](#license)
+- [Security](#security)
+  - [Security Notification template](#security-notification-template)
 
-2. Create a Windows Server 2019 VM
+## Read Me
 
-`Convert-WindowsImage -SourcePath "C:\Temp\windowsServer2019.iso" -VHDFormat "VHDX" -Edition "Windows Server 2019 Standard" -SizeBytes 50GB -DiskLayout "UEFI" -VHDPath "C:\Temp\windowsServer2019.vhdx"`
-					
-If you don't know the Edition, use -Edition "LIST" and the function will fail, but *list all editions in the ISO/WIM-file*.
+This document provides repository governance and index for `STS.Convert-WindowsImage`.
 
-## Bugs
+- For module usage, workflow pipeline, and architecture, see [STS.Convert-WindowsImage Module Guide](STS.Convert-WindowsImage.README.md).
 
-If you change the script for debugging remember to reload the functions
-   
-`. .\Convert-WindowsImage.ps1`
+![Maturity: Experimental](https://img.shields.io/badge/maturity-experimental-yellow)
 
-Please open an issue on github, when you found a bug. Run the script with "-Debug" and "-Verbose" options and a Transcript, like:
+## Governance
 
-```
-Start-Transcript
-Convert-WindowsImage -.... -Debug -Verbose
-Stop-Transcript
-```
+See [Governance](.github/GOVERNANCE.md) for details on how this project is governed.
 
-Please attach/post the transcript to the issue.
+## AI Policy
 
-You've guessed it, PR's are welcome.
+See [AI Policy](.github/AI_POLICY.md) for our guidelines, human accountability standards, and disclosure requirements regarding Artificial Intelligence (AI) usage in this project.
 
-## Requirements
 
-The script needs
-- **exact** Powershell 5.1 on a 
-- Windows Host (lowest is Windows 8, but Windows 10 is recommended) with 
-- **administrator rights**
-	
-Powershell ISE is currently supported, but will be deprecated in further releases, according microsofts policy. Consider using Visual Studio Code.
+> **"A computer can never be held accountable, therefore a computer must never make a management decision."**
+>
+>           - 1979 IBM internal training manual and presentation.
+
+## Authors
+
+Authored by **Scott T Surber** (<STS.Consulting@hotmail.com>).
+
+Spell checking and code improvements by various LLM / AI.
+
+See [Authors](.github/AUTHORS.md).
+
+## Accessibility
+
+We are committed to digital accessibility and making this project inclusive for everyone, including people using assistive technologies such as screen readers, keyboard navigation, and voice control. In alignment with guidance from [The A11Y Project](https://www.a11yproject.com/) and [WCAG 2.2 Level AA](https://www.w3.org/TR/WCAG22/), this repository and its documentation are developed with accessibility in mind.
+
+Accessibility is an ongoing commitment. While we strive to adhere to established guidelines and eliminate barriers, accessibility issues may still exist. If you encounter any accessibility barriers or have suggestions for improvement, please [open an accessibility challenge](https://github.com/STS-Consulting/STS.Convert-WindowsImage/issues/new?template=accessibility-challenge.md) to let us know.
+
+### Accessibility Challenge Template
+
+See [Accessibility Challenge template](.github/ISSUE_TEMPLATE/accessibility-challenge.md) for reporting accessibility barriers and challenges.
+
+## Support
+
+![Support: Limited](https://img.shields.io/badge/support-limited-yellow)
+
+[Healthy expectations in open source](https://www.donmccurdy.com/2023/07/03/expectations-in-open-source/)
+
+See [Support](.github/SUPPORT.md) for how to file issues and get help.
+
+## Code Owners
+
+See [Code Owners](.github/CODEOWNERS.md) for responsibility.
+
+## Changelog
+
+See [Changelog](.github/CHANGELOG.md) for the latest updates. 
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+This project adheres to **Calendar Versioning (yyyy.0M.0D.HH00)**.
+
+## Code of Conduct
+
+We are committed to a welcoming community. See [Code of Conduct](.github/CODE_OF_CONDUCT.md).
+
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-3.0-4baaaa.svg)](.github/CODE_OF_CONDUCT.md)
+
+### Conduct Report Template
+
+See [Conduct Report template](.github/CONDUCT_REPORT_TEMPLATE.md) for reporting code of conduct incidents.
+
+## Contributing
+
+We welcome contributions! See [Contributing](.github/CONTRIBUTING.md) and our [AI Policy](.github/AI_POLICY.md).
+
+### Pull Request Template
+
+See [Pull Request template](.github/PULL_REQUEST_TEMPLATE.md) for submitting pull requests.
+
+## Contributors
+
+See [Contributors](.github/CONTRIBUTORS.md) for the list of people who have contributed.
+
+## Acknowledgments
+
+One person can make a difference.
+
+See [Acknowledgments](.github/ACKNOWLEDGMENTS.md).
 
 ## License
 
-The code is licensed under the GPLv3-License since version 21H2.
-The code **was** licensed under the MIT licencse (X11) before version 21H1 as per the original source this implementation is based upon. See `LICENSE` for details.
+This work is licensed under a
+[Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License][cc-by-nc-sa].
+
+See [License](LICENSE.md).
+
+[![CC BY-NC-SA 4.0][cc-by-nc-sa-shield]][cc-by-nc-sa]
+
+[![CC BY-NC-SA 4.0][cc-by-nc-sa-image]][cc-by-nc-sa]
+
+[cc-by-nc-sa]: http://creativecommons.org/licenses/by-nc-sa/4.0/
+[cc-by-nc-sa-image]: https://licensebuttons.net/l/by-nc-sa/4.0/88x31.png
+[cc-by-nc-sa-shield]: https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg
+
+## Security
+
+See [Security](.github/SECURITY.md) for our security policy.
+
+### Security Notification Template
+
+See [Security Notification template](.github/SECURITY_NOTIFICATION_TEMPLATE.md) for reporting security issues.
+
+
+
