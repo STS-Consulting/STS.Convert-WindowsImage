@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 2026.10.21.0030
+.VERSION 2026.10.23.1430
 .GUID 8E92F731-C034-4C3D-882E-B71589CEE72B
 .AUTHOR Scott T Surber
 .COMPANYNAME STS Consulting
@@ -223,11 +223,10 @@ process {
         if ($isGitRepo) {
             $stagedFiles = @(git -C $RootPath diff --cached --name-only)
             if ($stagedFiles.Count -gt 0) {
-                $stagedCodeFiles = $stagedFiles | Where-Object {
-                    $PSItem -match '\.(ps1|psm1|psd1|cs)$' -and $PSItem -notmatch '(^Documentation[/\\]|Test-RepositoryConsistency|^\.vscode[/\\])'
-                } | Where-Object {
-                    $fileDiff = git -C $RootPath diff --cached -I '^\s*#' -I '^\s*(\.VERSION|ModuleVersion)\b' -- $PSItem 2>$null
-                    [bool]$fileDiff
+                # Find staged code files that have changes beyond automated signatures, XML signatures, and version stamps
+                $stagedDiffFiles = @(git -C $RootPath diff --cached --name-only -I '^\s*(#|<!--)' -I '\.VERSION\b' -I '^\s*ModuleVersion\b' 2>$null)
+                $stagedCodeFiles = $stagedDiffFiles | Where-Object {
+                    $PSItem -match '\.(ps1|psm1|psd1|cs)$' -and $PSItem -notmatch '(^Documentation[/\\]|Test-RepositoryConsistency|^\.vscode[/\\]|Install-Format\.Embedded\.ps1)'
                 }
 
                 if ($stagedCodeFiles.Count -gt 0) {
@@ -329,8 +328,8 @@ end {
 # SIG # Begin signature block
 # MIIcRAYJKoZIhvcNAQcCoIIcNTCCHDECAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCCEKe/OK7A8trCN
-# 3JNddDOP/qTliItSTCh1upIryp0c1KCCFnYwggM4MIICIKADAgECAhBq68etXxgs
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCAiEcH4Jz5KCGpJ
+# ZVUmvQB638W6ir214+FkzUiyDNsVjaCCFnYwggM4MIICIKADAgECAhBq68etXxgs
 # l0IzUnGnriXYMA0GCSqGSIb3DQEBCwUAMDQxMjAwBgNVBAMMKUF1dGhlbnRpY29k
 # ZSBDb2RlU2lnbmluZ0NlcnQgMjYwOC4zMC4yMTM5MB4XDTI2MDgzMTA0MjkyNFoX
 # DTI3MDgzMTA0NDkyNFowNDEyMDAGA1UEAwwpQXV0aGVudGljb2RlIENvZGVTaWdu
@@ -454,28 +453,28 @@ end {
 # dGljb2RlIENvZGVTaWduaW5nQ2VydCAyNjA4LjMwLjIxMzkCEGrrx61fGCyXQjNS
 # caeuJdgwDQYJYIZIAWUDBAIBBQCggYQwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKA
 # ADAZBgkqhkiG9w0BCQMxDAYKKwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYK
-# KwYBBAGCNwIBFTAvBgkqhkiG9w0BCQQxIgQg5FRhrllSI1bqY4d3TVUeuqkPEoCu
-# FKHypdES6rS+tgAwDQYJKoZIhvcNAQEBBQAEggEABz/8SOvCyOQ0WLZpvRf9sFAo
-# WYNrOex0fNi4x+saU9llODOiq8qENNtcqczlVxpHM7IeTxr6U4pcitBTYGJEJxyf
-# dzM9PNtTW3x3N/Fnr4InvftAFppMdXhBVHniM+vX1yO4gRg7QaQHfT3iQc2hCY19
-# XouPDDWb1bSv55jJuBG4ux1ZVjTZEKq+iLRQ9d25wvLLmvKOYanyA/hlbqlT3bGs
-# T8z27FZ7T2Xr1CVpVAvnjIBr+9pjyqFV7E+LYTJfBfTkW21HXFGRP+cspLVbJfmR
-# vnnMjj+vSnUGUmRZkAiiA4tJtcbRCBn4XTHTB9GmFQEELNGh8htEbj3M5Pd/4KGC
+# KwYBBAGCNwIBFTAvBgkqhkiG9w0BCQQxIgQg0gt/gmTvUcfbYFQdxp1Jop7du8II
+# 9HAl2iEdCbLOi+gwDQYJKoZIhvcNAQEBBQAEggEAFWuj20AY6Biy5d9DgZP9Nr3P
+# xY/Ie4b/TX3TSU/JF+dEArpF+fhXAzRg2Af7pnoK/dXjxsNIkWMbQZKaTX+JF2tS
+# R6UgJs1axVwaFs3km6RTWiwBT44wUjP5jCUXewuz5IhHRSxtexZjhNeLpmy9+A4a
+# ZOyxqi6uMLJimlLXJc/aWQ/th/8bpSAjTaf3mae1w4XvpgpTWuNCpLOz2FfAbtur
+# y3HOe3EPlnxiymGHlZjjSaDiyHSafp8uAWXZ7uMlEIU3Z52ucsePpc8Gv6qaEP2M
+# /FF9eWeRrxnC9zpwzJVTRZFUX2vlOSIcnZtjffL4Udy4FpxQgyGc/LmRp9lHe6GC
 # AyYwggMiBgkqhkiG9w0BCQYxggMTMIIDDwIBATB9MGkxCzAJBgNVBAYTAlVTMRcw
 # FQYDVQQKEw5EaWdpQ2VydCwgSW5jLjFBMD8GA1UEAxM4RGlnaUNlcnQgVHJ1c3Rl
 # ZCBHNCBUaW1lU3RhbXBpbmcgUlNBNDA5NiBTSEEyNTYgMjAyNSBDQTECEAhP3DNP
 # fkVO28MPj/mSGDUwDQYJYIZIAWUDBAIBBQCgaTAYBgkqhkiG9w0BCQMxCwYJKoZI
-# hvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0yNjEwMjEwNzMyNDVaMC8GCSqGSIb3DQEJ
-# BDEiBCBxQoJBXJny/OgqLNSIP0cFva8WAEmzRNDq8IJanzC0WTANBgkqhkiG9w0B
-# AQEFAASCAgBRQDyGJb22feoYY+4NZhTQMYJK5hGOY95HLJUW4kCubqJGaGsMmKwm
-# t1nonppGKVyjf4LbWOeYzICk4SGrPVKZI1C6DWrWykVldHQJT0MDIvD03A2WZvhO
-# zxl0ByaVQFFD5Fntcom0dfQLaGHNIeqHW+0K9DSBExx8YfvdRfFASFnzdrNEfd0d
-# Wrxu70bu3a+7By1ywZK3WmXOL59SyyZlt5iLp1bQ5ajVd3ZD9SY++NhcrrlK+kxd
-# 0jaKcRgsb+Vu7LfCZxh69zn6n/9UyuJuzTJ8nVnOgSR8BF+U4Cylc7hOpL9uP3XZ
-# 4MmPUTgvNrglK2fJHTHZHnBVmn0kh2S3VO//FZveu3O75IuxYgE0x2LpF8anjprj
-# 0tvfjFpHRUJlNiGWTTDUKP921a9kdog+OY27P1CBSW3A4v3QMg/1716xiy8g4ImF
-# /glB152z/wvmH24jlRfFxlQnDZGY30Enwtb7BCgcdhton+t6OMKJ+wxOaO9/3W8B
-# 6b5c8XpStLOZwRNN7r4UncAzB2Blq2RfGHwGMxPDpcrDzSwagZLU3a7s9NGRX7qk
-# RHP7h0Lv/eeSIhCiQwlugW3Ixl8d9GMjCzCvysIlhlDDWezVzBpaw4f/COFfHMUn
-# cFhTNDe2MmaO8iE7oLn0bpWzCGkVV6dqAttNHo7ybJlIzRECNB3iyA==
+# hvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0yNjEwMjMyMTQxMTBaMC8GCSqGSIb3DQEJ
+# BDEiBCCX+dkalTVSgVf6VIhA/b5lnqeSxKoF7QBfTSaFFMR78zANBgkqhkiG9w0B
+# AQEFAASCAgBSFXNMrOiLF5NreclXHCZ4HqZhF5F72HZebw2rmJhQQRa38cITE04L
+# u9VDDqNUoiJ9aXIOGXXwqBlApuSK7yxiPp+k62tJBN8hkOMKDHA52B/030wlEwrm
+# PI0oreDEYIr1QrrFUKkAqn8G/LCi9xsU0fDd4R0wdio5tRdgUmRT54rr391F8Dqs
+# wNelDhFROmjcNtRHaHevpF6F/c4+Nu03aJMDPhQjbS19wld/0U510E3b/67MXF6Y
+# yttlDvJIFUi+dMvkbpmZJD8OVkX6nwckUmd09Aopa/Tdhf2utWnY/DxWwpQPMaeI
+# 7sV77W10gPQG7WUvMdp4cUZdKFQxh7m7oXwnbxCrf0aqU3lTT6ePBvVOtuEfRNp+
+# Ni/9p0U25c96KWkenO8EyIQ2y1tCRoH3FvDn45ngLzqS88tEyRDOF0WGbu8o5MIT
+# 1qEy91Ut7OYp9FBqXX5UBxaqxlfKSeJhwmbLo5ThSADXeKNtuL4w7owZFOycaV2u
+# Bx2BlgiPtH/0fqX+c1X8gL9TZUfopZOO8Cbi7yRojLLfJh3uOLojckA+cae1LDSd
+# HWWR3tHWItMHMk1xx7/sRNz9Pzt/0gCtV+fjLzxl73C04F7H1Qqo896W4LYlEtdF
+# nbIfnGv2AnKy8x6YDEJ/EOq/ZbFixjQ/NzJ8XP+JsG8sBqTywQmQHw==
 # SIG # End signature block

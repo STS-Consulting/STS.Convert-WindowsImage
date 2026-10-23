@@ -16,6 +16,7 @@ and this project adheres to [Calendar Versioning](https://calver.org/) (YYYY.0M.
 - Documentation: Added dedicated `Convert-WindowsImage.README.md`.
 
 ### Changed
+- Coding Standards: Prohibited casting to [void] in addition to Out-Null; unneeded output must be discarded by assigning to $null = ....
 
 - Script Implementation: Refactored `Convert-WindowsImage.ps1` to conform to PowerShell 7+ standards, parameter splatting, explicit parameter typing, and `$PSItem` pipeline variable usage.
 - Standards: Standardized repository versioning to Calendar Versioning (YYYY.0M.0D) and configured OTBS code formatting.
